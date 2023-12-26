@@ -29,3 +29,9 @@ temp = array.reduce(
     }, []
 );
 console.log(temp);
+
+// check if one or all satisfied
+const isString = (item) => typeof item === "string";
+
+array.some(isString); // true
+array.every(isString); // false
