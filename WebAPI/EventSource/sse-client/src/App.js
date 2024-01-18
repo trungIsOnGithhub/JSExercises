@@ -11,11 +11,37 @@ function App() {
   useEffect(() => {
     if (!listening) {
       const eveSource = new EventSource(URL);
+
+      eveSource.onmessage = (event) => {
+        const parsedData = JSON.parse(event.data);
+
+        setFacts(facts => facts.concat(parsedData));
+      };
+
     }
   }, [facts, listening]);
 
   return (
+    <table className="stats-table">
+      <thead>
+        <tr>
+          <th>Fact</th>
+          <th>Source</th>
+        </tr>
+      </thead>
 
+      <tbody>
+        {
+          facts.map(
+            (fact, i) =>
+              ( <tr key={i}>
+                <td>{fact}</td>
+                <td>{"ko co gi"}</td>
+              </tr> )
+          )
+        }
+      </tbody>
+    </table>
   );
 }
 

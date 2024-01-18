@@ -7,6 +7,10 @@ body {
   padding: 4em 1em;
 }
 
+table, td, tr {
+  border: 1px solid black;
+}
+
 .stats-table {
   border-collapse: collapse;
   text-align: center;
