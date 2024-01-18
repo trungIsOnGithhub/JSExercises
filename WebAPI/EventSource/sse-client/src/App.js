@@ -17,9 +17,10 @@ function App() {
 
         setFacts(facts => facts.concat(parsedData));
       };
-
+      
+      setListening(true);
     }
-  }, [facts, listening]);
+  }, [listening]);
 
   return (
     <table className="stats-table">
