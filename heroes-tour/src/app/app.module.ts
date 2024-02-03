@@ -15,4 +15,4 @@ import { HeroesListComponent } from './heroes-list/heroes-list.component';
   providers: [],
   bootstrap: [AppComponent]
 })
-export class AppModule { }
+export class AppModule {}
