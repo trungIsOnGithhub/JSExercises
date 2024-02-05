@@ -2,6 +2,12 @@ import { Component } from '@angular/core';
 
 import { Hero } from '../models/Hero';
 
+const dummy_hero : Hero = {
+  id: -1,
+  age: -1,
+  name: 'Nothing to display'
+}
+
 @Component({
   selector: 'app-heroes-list',
   templateUrl: './heroes-list.component.html',
@@ -21,5 +27,10 @@ export class HeroesListComponent {
     }
   ];
 
-  selected_hero : Hero = this.hero_list[0];
+  selected_hero? : Hero;
+
+  onSelectHero(hero : Hero) : void
+  {
+    this.selected_hero = hero;
+  }
 }
