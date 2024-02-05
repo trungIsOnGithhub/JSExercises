@@ -1,7 +1,13 @@
+<div>
+    <label for="name">Hero name: </label>
+    <input id="name" [(ngModel)]="selected_hero.name" placeholder="name">
+</div>
+
 <div
     *ngFor="let hero of hero_list"
 >
-    <h2>{{hero.name}} Details</h2>
+    <h3>{{'Name:' | uppercase}} {{ hero.name }}</h3>
+    <h3>{{'Age:' | uppercase}} {{ hero.age }}</h3>
     <div><span>id: </span>{{hero.id}}</div>
     <hr>
 </div>
