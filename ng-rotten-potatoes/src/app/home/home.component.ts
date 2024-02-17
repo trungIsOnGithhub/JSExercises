@@ -13,6 +13,9 @@ export class HomeComponent implements OnInit {
   theatreMovies? : Movie[];
   trendingMovies? : Movie[];
 
+  imageWidth : number = 50;
+  imageHeight : number = 80;
+
   constructor(private router : Router, private httpClient : HttpClient) {}
 
   ngOnInit(): void {
@@ -42,7 +45,7 @@ export class HomeComponent implements OnInit {
     })
   }
 
-  goToMovie(type : string, id : string) { 
+  goToMovie(type : string, id : number) { 
     this.router.navigate(['movie', type, id])
   }
 }
