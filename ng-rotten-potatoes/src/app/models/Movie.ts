@@ -4,6 +4,7 @@ export default class Movie {
     id : number;
     name : string;
     rating : number;
+    cover? : string;
     reviews? : Review[];
 
     constructor(id : number, name : string, rating : number) {
