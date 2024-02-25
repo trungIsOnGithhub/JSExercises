@@ -1,0 +1,59 @@
+<style>
+    th,td,tr {
+        margin: 1em;
+        padding: 1em;
+    }
+</style>
+<section>
+    <!-- <label for="startDate">Start Date:</label> -->
+    <input [(ngModel)]="currentFilterStartDate" (change)="applyStartDateFilter()" id="startDate" type="date">
+    <!-- <label for="endDate">End Date:</label> -->
+    <input [(ngModel)]="currentFilterEndDate" (change)="applyEndDateFilter()" id="endDate" type="date">
+    <select [(ngModel)]="currentFilterLeaveType" (change)="applyLeaveTypeFilter()">
+        <option selected>All</option>
+        <option>Annual Leave</option>
+        <option>Unpaid Leave</option>
+        <option>Flexible Time</option>
+        <option>WFH</option>
+    </select>
+    <select [(ngModel)]="currentFilterLeaveStatus" (change)="applyLeaveStatusFilter()">
+        <option selected>All</option>
+        <option>Approved</option>
+        <option>Not Approved</option>
+    </select>
+</section>
+<!-- <h1>{{ currentFilterLeaveType }}</h1> -->
+<h1>Current Filter Start: {{ currentFilterStartDate | date }}</h1>
+<h1>Current Filter End: {{ currentFilterEndDate | date }}</h1>
+<!-- <h1> {{ filteredData.length }} </h1> -->
+<!-- <table>
+    <tr>
+        <th>Requester</th>
+        <th>Start Date</th>
+        <th>End Date</th>
+        <th>Leave Type</th>
+        <th>Is Approved</th>
+    </tr>
+    <tr *ngFor="let request of filteredData">
+        <td>{{ request.requester }}</td>
+        <td>{{ request.startDate | date }}</td>
+        <td>{{ request.endDate | date }}</td>
+        <td>{{ request.leaveType }}</td>
+        <td>{{ request.isApproved ? 'Approved' : 'Not Approved' }}</td>
+    </tr>
+</table> -->
+<table>
+    <tr>
+        <th>Requester</th>
+        <th>Annual Leave</th>
+        <th>Unpaid Leave</th>
+        <th>WFH</th>
+        <th>Flexible Time</th>
+    </tr>
+    <tr *ngFor="let summary of summaryDataArray">
+        <td>{{ summary.requester }}</td>
+        <td *ngFor="let leaveType of leaveTypeArray">
+            {{ summary[leaveType] }} / {{ predefinedLimitForLeaveType[leaveType] }}
+        </td>
+    </tr>
+</table>
