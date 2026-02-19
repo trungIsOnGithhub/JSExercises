@@ -80,9 +80,29 @@ check_mandatory_deps() {
     local missings=()
     command -v curl >/dev/null 2>&1 || missings+=("curl")
     command -v jq >/dev/null 2>&1 || missings+=("jq")
+
+    # check copy to clipboard denpendencies
+    command -v xclip >/dev/null 2>&1 \
+            || command -v xsel >/dev/null 2>&1 \
+            || command -v pbcopy >/dev/null 2>&1 \
+            || missings+=("xclip/xsel/pbcopy")
     if [ ${#missing[@]} -ne 0 ]; then
         echo -e "${RED}❌ Missing dependencies: ${missing[*]}${NC}" >&2
         echo -e "${YELLOW}💡 For Ubuntu, try: sudo apt update && sudo apt install ${missing[*]}" >&2
         exit 1
     fi
+}
+
+copy_to_clipboard() {
+    local text="$1"
+    if command -v xclip >/dev/null 2>&1; then
+        echo -n "$text" | xclip -selection clipboard
+    elif command -v xsel >/dev/null 2>&1; then
+        echo -n "$text" | xsel --clipboard --input
+    elif command -v pbcopy >/dev/null 2>&1; then
+        echo -n "$text" | pbcopy
+    else
+        return 1
+    fi
+    return 0
 }
