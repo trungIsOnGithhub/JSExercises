@@ -106,3 +106,43 @@ copy_to_clipboard() {
     fi
     return 0
 }
+
+print_usage() {
+    echo "\tUsage: ${$0} [options] <query>\n
+        \t\t -o, --object <filename>  | Copy response to <file> (default is stdout)\n
+        \t\t -c, --clipboard  | Copy response to clipboard\n
+        \t\t -h, --help  | Show usage help\n\n
+        \tEnvironment:\n
+        \t\t DEEPSEEK_API_KEY (required)\n\n
+        \tExamples:\n
+        \t\t${$0} "list all running processes sorted by memory"
+        \n\n"
+}
+
+QUERY=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -o|--object)
+            if [[ -z "$2" || "$2" =~ ^- ]]; then
+                error_exit "Option -o requires a filename argument."
+            fi
+
+            OUTPUT_FILE="$2"
+            shift 2
+            ;;
+        -c|--clipboard)
+            COPY_TO_CLIPBOARD=true
+            shift 1
+            ;;
+        -h|--help)
+            print_usage
+            ;;
+        -*)
+            error_exit "Unknown option: $1. Use -h for help."
+            ;;
+        *)
+            QUERY+=("$1")
+            shift 1
+            ;;
+    esac
+done
