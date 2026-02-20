@@ -141,11 +141,11 @@ while [[ $# -gt 0 ]]; do
             ;;
         -h|--help)
             print_usage
-            break
+            exit 0
             ;;
         -*)
-            error_exit "Unknown option: $1. Use -h for help."
-            break
+            error_exit "Unknown option: $1. Use -h/--help for help."
+            exit 1
             ;;
         *)
             QUERY+=("$1")
@@ -185,7 +185,7 @@ HTTP_STATUS=$(curl -s -w "%{http_code}" -X POST "$API_URL" \
 if [ "$HTTP_STATUS" -ne 200 ]; then
     ERROR_MSG=$(jq -r '.error.message // .message // "Unknown error"' "$RESPONSE_FILE" 2>/dev/null || echo "Could not parse error response.")
     rm -f "$RESPONSE_FILE"
-    error_exit "HTTP $HTTP_STATUS: $ERROR_MSG"
+    error_exit "return HTTP $HTTP_STATUS: $ERROR_MSG"
 fi
 
 if jq -e '.error' "$RESPONSE_FILE" >/dev/null 2>&1; then
