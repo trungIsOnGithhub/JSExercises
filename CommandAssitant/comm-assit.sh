@@ -60,7 +60,7 @@ MODEL="deepseek-chat"
 SYSTEM_PROMPT="You are a bash expert. Output ONLY the command, no explanation or markdown."
 
 # --- Colors for output ---
-RED='\033[0;31m'
+RED='\033[0;91m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
@@ -71,7 +71,7 @@ COPY_TO_CLIPBOARD=false
 
 # --- Helper functions ---
 error_exit() {
-    echo -e "${RED}❌ $1${NC}" >&2
+    echo -e "${RED}! $1${NC}" >&2
     exit 1
 }
 
@@ -87,9 +87,15 @@ check_mandatory_deps() {
             || command -v pbcopy >/dev/null 2>&1 \
             || missings+=("xclip/xsel/pbcopy")
     if [ ${#missing[@]} -ne 0 ]; then
-        echo -e "${RED}❌ Missing dependencies: ${missing[*]}${NC}" >&2
-        echo -e "${YELLOW}💡 For Ubuntu, try: sudo apt update && sudo apt install ${missing[*]}" >&2
+        echo -e "${RED}! Missing dependencies: ${missing[*]}${NC}" >&2
+        echo -e "${YELLOW}? For Ubuntu, try: sudo apt update && sudo apt install ${missing[*]}" >&2
         exit 1
+    fi
+}
+
+check_environment_variables() {
+    if [[ -z "$DEEPSEEK_API_KEY" ]]; then
+        error_exit "DEEPSEEK_API_KEY environment variable not set."
     fi
 }
 
@@ -108,23 +114,23 @@ copy_to_clipboard() {
 }
 
 print_usage() {
-    echo "\tUsage: ${$0} [options] <query>\n
-        \t\t -o, --object <filename>  | Copy response to <file> (default is stdout)\n
-        \t\t -c, --clipboard  | Copy response to clipboard\n
-        \t\t -h, --help  | Show usage help\n\n
-        \tEnvironment:\n
-        \t\t DEEPSEEK_API_KEY (required)\n\n
-        \tExamples:\n
-        \t\t${$0} "list all running processes sorted by memory"
-        \n\n"
+    echo "Usage: $0 [options] <query>
+            -o, --object <filename> = Copy response to <filename> (default is stdout)
+            -c, --clipboard = Copy response to clipboard\n
+            -h, --help = Show usage help
+        Environment:
+            DEEPSEEK_API_KEY (required)
+        Examples:
+        $0 'list all running processes sorted by memory'"
 }
+
 
 QUERY=()
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -o|--object)
-            if [[ -z "$2" || "$2" =~ ^- ]]; then
-                error_exit "Option -o requires a filename argument."
+            if [[ "$#" -ne 2 ]]; then
+                error_exit "Option -o/--object requires a filename argument."
             fi
 
             OUTPUT_FILE="$2"
@@ -136,9 +142,11 @@ while [[ $# -gt 0 ]]; do
             ;;
         -h|--help)
             print_usage
+            break
             ;;
         -*)
             error_exit "Unknown option: $1. Use -h for help."
+            break
             ;;
         *)
             QUERY+=("$1")
@@ -146,3 +154,27 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+
+check_environment_variables
+QUERY_STRING="${QUERY[*]}"
+
+REQUEST_JSON=$(jq -n \
+    --arg model "$MODEL" \
+    --arg system "$SYSTEM_PROMPT" \
+    --arg user "$QUERY_STRING" \
+    '{
+        model: $model,
+        messages: [
+            {role: "system", content: $system},
+            {role: "user", content: $user}
+        ]
+    }')
+
+# --- Make API call with error handling ---
+RESPONSE_FILE=$(mktemp)
+HTTP_STATUS=$(curl -s -w "%{http_code}" -X POST "$API_URL" \
+    -H "Authorization: Bearer $DEEPSEEK_API_KEY" \
+    -H "Content-Type: application/json" \
+    -d "$REQUEST_JSON" \
+    -o "$RESPONSE_FILE" 2>/dev/null)
