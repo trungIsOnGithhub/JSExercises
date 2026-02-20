@@ -179,16 +179,23 @@ HTTP_STATUS=$(curl -s -w "%{http_code}" -X POST "$API_URL" \
     -d "$REQUEST_JSON" \
     -o "$RESPONSE_FILE" 2>/dev/null)
 
-
 if [ "$HTTP_STATUS" -ne 200 ]; then
     ERROR_MSG=$(jq -r '.error.message // .message // "Unknown error"' "$RESPONSE_FILE" 2>/dev/null || echo "Could not parse error response.")
     rm -f "$RESPONSE_FILE"
     error_exit "HTTP $HTTP_STATUS: $ERROR_MSG"
 fi
 
-
 if jq -e '.error' "$RESPONSE_FILE" >/dev/null 2>&1; then
     ERROR_MSG=$(jq -r '.error.message // "Unknown API error"' "$RESPONSE_FILE")
     rm -f "$RESPONSE_FILE"
     error_exit "API error: $ERROR_MSG"
 fi
+
+COMMAND=$(jq -r '.choices[0].message.content' "$RESPONSE_FILE" 2>/dev/null)
+
+if [ -z "$COMMAND" ] || [ "$COMMAND" = "null" ]; then
+    rm -f "$RESPONSE_FILE"
+    error_exit "Failed to extract command from API response. Raw response: $(cat "$RESPONSE_FILE")"
+fi
+
+rm -f "$RESPONSE_FILE"
