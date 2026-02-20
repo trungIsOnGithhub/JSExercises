@@ -171,10 +171,24 @@ REQUEST_JSON=$(jq -n \
         ]
     }')
 
-# --- Make API call with error handling ---
+# --- API call with error handling ---
 RESPONSE_FILE=$(mktemp)
 HTTP_STATUS=$(curl -s -w "%{http_code}" -X POST "$API_URL" \
     -H "Authorization: Bearer $DEEPSEEK_API_KEY" \
     -H "Content-Type: application/json" \
     -d "$REQUEST_JSON" \
     -o "$RESPONSE_FILE" 2>/dev/null)
+
+
+if [ "$HTTP_STATUS" -ne 200 ]; then
+    ERROR_MSG=$(jq -r '.error.message // .message // "Unknown error"' "$RESPONSE_FILE" 2>/dev/null || echo "Could not parse error response.")
+    rm -f "$RESPONSE_FILE"
+    error_exit "HTTP $HTTP_STATUS: $ERROR_MSG"
+fi
+
+
+if jq -e '.error' "$RESPONSE_FILE" >/dev/null 2>&1; then
+    ERROR_MSG=$(jq -r '.error.message // "Unknown API error"' "$RESPONSE_FILE")
+    rm -f "$RESPONSE_FILE"
+    error_exit "API error: $ERROR_MSG"
+fi
