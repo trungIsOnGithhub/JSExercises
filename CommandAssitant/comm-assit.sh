@@ -57,15 +57,14 @@ set -euo pipefail
 # --- Configuration ---
 API_URL="https://api.deepseek.com/v1/chat/completions"
 MODEL="deepseek-chat"
-SYSTEM_PROMPT="You are a bash expert. Output ONLY the command, no explanation or markdown."
+SYSTEM_PROMPT="You are a Bash script expert. Output ONLY the command, followed by short explanation comment, no more."
 
-# --- Colors for output ---
 RED='\033[0;91m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# --- Defaults ---
+# --- Defaults Parameter ---
 OUTPUT_FILE=""
 COPY_TO_CLIPBOARD=false
 
@@ -86,15 +85,15 @@ check_mandatory_deps() {
             || command -v xsel >/dev/null 2>&1 \
             || command -v pbcopy >/dev/null 2>&1 \
             || missings+=("xclip/xsel/pbcopy")
-    if [ ${#missing[@]} -ne 0 ]; then
-        echo -e "${RED}! Missing dependencies: ${missing[*]}${NC}" >&2
-        echo -e "${YELLOW}? For Ubuntu, try: sudo apt update && sudo apt install ${missing[*]}" >&2
+    if [ ${#missings[@]} -ne 0 ]; then
+        echo -e "${RED}! Missing dependencies: ${missings[*]}${NC}" >&2
+        echo -e "${YELLOW}? For Ubuntu, try: sudo apt update && sudo apt install ${missings[*]}" >&2
         exit 1
     fi
 }
 
 check_environment_variables() {
-    if [[ -z "$DEEPSEEK_API_KEY" ]]; then
+    if [[ -z $DEEPSEEK_API_KEY ]]; then
         error_exit "DEEPSEEK_API_KEY environment variable not set."
     fi
 }
@@ -155,8 +154,12 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+if [ ${#QUERY[@]} -eq 0 ]; then
+    print_usage
+fi
 
-check_environment_variables
+check_mandatory_deps
+# check_environment_variables
 QUERY_STRING="${QUERY[*]}"
 
 REQUEST_JSON=$(jq -n \
@@ -199,3 +202,25 @@ if [ -z "$COMMAND" ] || [ "$COMMAND" = "null" ]; then
 fi
 
 rm -f "$RESPONSE_FILE"
+
+# --- Handle output: file, clipboard, stdout ---
+if [ -n "$OUTPUT_FILE" ]; then
+    echo "$FULL_OUTPUT" > "$OUTPUT_FILE"
+    echo -e "${GREEN}✅ Command written to $OUTPUT_FILE${NC}"
+fi
+
+if [ "$COPY_TO_CLIPBOARD" = true ]; then
+    if copy_to_clipboard "$FULL_OUTPUT"; then
+        echo -e "${GREEN}✅ Command copied to clipboard${NC}"
+    else
+        # This should never happen because we already checked deps, but just in case
+        echo -e "${YELLOW}⚠️  Could not copy to clipboard (unexpected error)${NC}" >&2
+    fi
+fi
+
+# If no output file specified, print to stdout
+if [ -z "$OUTPUT_FILE" ]; then
+    echo "$FULL_OUTPUT"
+fi
+
+exit 0
